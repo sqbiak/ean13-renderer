@@ -4,7 +4,7 @@
  * A lightweight, professional-quality EAN-13 barcode generator
  * with proper GS1-compliant digit placement.
  *
- * @version 1.0.0
+ * @version 1.0.1
  * @license Proprietary
  * @author ZenBlock
  * @copyright (c) 2024 ZenBlock. All Rights Reserved.
@@ -140,6 +140,10 @@
         textMargin: 2,       // Gap between bars and text
         quietZone: 12,       // Quiet zone width (space for first digit)
         sideDigitGap: 2,     // Gap between side digit and guard bars
+        paddingLeft: 0,      // Extra padding on left side
+        paddingRight: 0,     // Extra padding on right side
+        paddingTop: 0,       // Extra padding on top
+        paddingBottom: 0,    // Extra padding on bottom
         background: '#FFFFFF',
         foreground: '#000000',
         font: '"OCR-B", "Courier New", monospace'
@@ -166,6 +170,7 @@
         const {
             moduleWidth, height, guardExtend, fontSize,
             textMargin, quietZone, sideDigitGap,
+            paddingLeft, paddingRight, paddingTop, paddingBottom,
             background, foreground, font
         } = opts;
 
@@ -175,8 +180,10 @@
         // Calculate dimensions
         const barcodeWidth = encoding.length * moduleWidth;
         const guardHeight = height + guardExtend;
-        const totalWidth = barcodeWidth + quietZone * 2;
-        const totalHeight = guardHeight + fontSize + textMargin;
+        const contentWidth = barcodeWidth + quietZone * 2;
+        const contentHeight = guardHeight + fontSize + textMargin;
+        const totalWidth = contentWidth + paddingLeft + paddingRight;
+        const totalHeight = contentHeight + paddingTop + paddingBottom;
 
         // Set canvas size
         canvas.width = totalWidth;
@@ -188,9 +195,13 @@
         ctx.fillStyle = background;
         ctx.fillRect(0, 0, totalWidth, totalHeight);
 
+        // Offset for padding
+        const offsetX = paddingLeft;
+        const offsetY = paddingTop;
+
         // Draw bars
         ctx.fillStyle = foreground;
-        let x = quietZone;
+        let x = offsetX + quietZone;
 
         for (let i = 0; i < encoding.length; i++) {
             // Guards: start (0-2), center (45-49), end (92-94)
@@ -198,7 +209,7 @@
             const barHeight = isGuard ? guardHeight : height;
 
             if (encoding[i] === '1') {
-                ctx.fillRect(x, 0, moduleWidth, barHeight);
+                ctx.fillRect(x, offsetY, moduleWidth, barHeight);
             }
             x += moduleWidth;
         }
@@ -207,22 +218,22 @@
         ctx.fillStyle = foreground;
         ctx.font = `${fontSize}px ${font}`;
         ctx.textBaseline = 'top';
-        const textY = height + textMargin;
+        const textY = offsetY + height + textMargin;
 
         // First digit - in quiet zone
         ctx.textAlign = 'right';
-        ctx.fillText(fullCode[0], quietZone - sideDigitGap, textY);
+        ctx.fillText(fullCode[0], offsetX + quietZone - sideDigitGap, textY);
 
         // Left group (digits 1-6)
         ctx.textAlign = 'center';
-        const leftStart = quietZone + 3 * moduleWidth;
+        const leftStart = offsetX + quietZone + 3 * moduleWidth;
         for (let i = 0; i < 6; i++) {
             const digitX = leftStart + (i + 0.5) * 7 * moduleWidth;
             ctx.fillText(fullCode[i + 1], digitX, textY);
         }
 
         // Right group (digits 7-12)
-        const rightStart = quietZone + 50 * moduleWidth;
+        const rightStart = offsetX + quietZone + 50 * moduleWidth;
         for (let i = 0; i < 6; i++) {
             const digitX = rightStart + (i + 0.5) * 7 * moduleWidth;
             ctx.fillText(fullCode[i + 7], digitX, textY);
@@ -268,7 +279,7 @@
         encode,
         validate,
         calculateChecksum,
-        version: '1.0.0',
+        version: '1.0.1',
         DEFAULTS
     };
 
