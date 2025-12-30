@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EAN-13 Renderer - Demo</title>
+    <script src="ean13-renderer.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #333; }
+        .demo-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        canvas { display: block; margin: 20px auto; border: 1px solid #eee; }
+        input, button {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover { background: #2980b9; }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        code { font-family: 'Fira Code', monospace; }
+        .options { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 6px; }
+        .options label { display: flex; flex-direction: column; font-size: 13px; color: #555; }
+        .options input, .options select { margin-top: 5px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; }
+        .options input[type="color"] { height: 32px; padding: 2px; }
+        button { margin-right: 5px; }
+        button:last-child { background: #95a5a6; }
+        button:last-child:hover { background: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <h1>EAN-13 Renderer</h1>
+    <p>Lightweight, professional-quality EAN-13 barcode generator (MIT License)</p>
+
+    <div class="demo-box">
+        <h3>Live Demo</h3>
+        <input type="text" id="code-input" value="978020137962" placeholder="Enter 12 or 13 digits">
+        <button onclick="generateBarcode()">Generate</button>
+
+        <div class="options">
+            <label>Module Width: <input type="number" id="opt-width" value="2" min="1" max="5" step="0.5"></label>
+            <label>Height: <input type="number" id="opt-height" value="70" min="20" max="200"></label>
+            <label>Guard Extend: <input type="number" id="opt-guard" value="10" min="0" max="50"></label>
+            <label>Font Size: <input type="number" id="opt-font" value="14" min="6" max="32"></label>
+            <label>Text Margin: <input type="number" id="opt-textmargin" value="2" min="0" max="20"></label>
+            <label>Quiet Zone: <input type="number" id="opt-quietzone" value="12" min="0" max="50"></label>
+            <label>Side Digit Gap: <input type="number" id="opt-sidegap" value="2" min="0" max="20"></label>
+            <label>Background: <input type="color" id="opt-bg" value="#FFFFFF"></label>
+            <label>Foreground: <input type="color" id="opt-fg" value="#000000"></label>
+            <label>Font:
+                <select id="opt-fontfamily">
+                    <option value='"OCR-B", "Courier New", monospace'>OCR-B / Courier</option>
+                    <option value='"Arial", sans-serif'>Arial</option>
+                    <option value='"Helvetica", sans-serif'>Helvetica</option>
+                    <option value='"monospace"'>Monospace</option>
+                    <option value='"Georgia", serif'>Georgia</option>
+                </select>
+            </label>
+        </div>
+
+        <canvas id="barcode"></canvas>
+
+        <div style="margin: 15px 0; display: flex; gap: 10px;">
+            <button onclick="downloadBarcode()">Download PNG</button>
+            <button onclick="resetDefaults()">Reset Defaults</button>
+        </div>
+
+        <h4>Generated Code:</h4>
+        <pre id="code-output" style="font-size: 12px; max-height: 200px; overflow: auto;"></pre>
+    </div>
+
+    <div class="demo-box">
+        <h3>Installation</h3>
+        <pre><code>&lt;!-- CDN (jsDelivr) --&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/user/ean13-renderer@1.0.0/ean13-renderer.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- Or download and include locally --&gt;
+&lt;script src="ean13-renderer.min.js"&gt;&lt;/script&gt;</code></pre>
+    </div>
+
+    <div class="demo-box">
+        <h3>Usage</h3>
+        <pre><code>// Render to canvas
+EAN13Renderer.render('#my-canvas', '978020137962');
+
+// With options
+EAN13Renderer.render(canvas, '978020137962', {
+    moduleWidth: 2,     // Bar width (px)
+    height: 70,         // Main bar height (px)
+    guardExtend: 10,    // Guard bar extension (px)
+    fontSize: 14,       // Digit font size (px)
+    textMargin: 2,      // Gap between bars and text
+    quietZone: 12,      // Space for first digit
+    background: '#FFFFFF',
+    foreground: '#000000'
+});
+
+// Get as Data URL
+const dataUrl = EAN13Renderer.toDataURL('978020137962');
+
+// Get as Blob (async)
+const blob = await EAN13Renderer.toBlob('978020137962');
+
+// Validate code
+EAN13Renderer.validate('9780201379624'); // true
+
+// Calculate checksum
+EAN13Renderer.calculateChecksum('978020137962'); // 4</code></pre>
+    </div>
+
+    <div class="demo-box">
+        <h3>License</h3>
+        <p><strong>Proprietary License</strong> - Copyright (c) 2024 ZenBlock. All Rights Reserved.</p>
+        <p><strong>Free for:</strong> Personal use, education, evaluation</p>
+        <p><strong>Commercial license required for:</strong> Business use, redistribution, inclusion in products</p>
+        <p>Contact: <a href="mailto:sebastian.qbiak+license@gmail.com">sebastian.qbiak+license@gmail.com</a></p>
+    </div>
+
+    <script>
+        function getOptions() {
+            return {
+                moduleWidth: parseFloat(document.getElementById('opt-width').value),
+                height: parseInt(document.getElementById('opt-height').value),
+                guardExtend: parseInt(document.getElementById('opt-guard').value),
+                fontSize: parseInt(document.getElementById('opt-font').value),
+                textMargin: parseInt(document.getElementById('opt-textmargin').value),
+                quietZone: parseInt(document.getElementById('opt-quietzone').value),
+                sideDigitGap: parseInt(document.getElementById('opt-sidegap').value),
+                background: document.getElementById('opt-bg').value,
+                foreground: document.getElementById('opt-fg').value,
+                font: document.getElementById('opt-fontfamily').value
+            };
+        }
+
+        function generateBarcode() {
+            const code = document.getElementById('code-input').value;
+            try {
+                EAN13Renderer.render('#barcode', code, getOptions());
+                updateCodeOutput();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        function downloadBarcode() {
+            const code = document.getElementById('code-input').value;
+            const dataUrl = EAN13Renderer.toDataURL(code, getOptions());
+            const link = document.createElement('a');
+            link.download = `ean13-${code}.png`;
+            link.href = dataUrl;
+            link.click();
+        }
+
+        function updateCodeOutput() {
+            const opts = getOptions();
+            const code = document.getElementById('code-input').value;
+            const codeStr = `EAN13Renderer.render('#canvas', '${code}', ${JSON.stringify(opts, null, 2)});`;
+            document.getElementById('code-output').textContent = codeStr;
+        }
+
+        function resetDefaults() {
+            document.getElementById('opt-width').value = 2;
+            document.getElementById('opt-height').value = 70;
+            document.getElementById('opt-guard').value = 10;
+            document.getElementById('opt-font').value = 14;
+            document.getElementById('opt-textmargin').value = 2;
+            document.getElementById('opt-quietzone').value = 12;
+            document.getElementById('opt-sidegap').value = 2;
+            document.getElementById('opt-bg').value = '#FFFFFF';
+            document.getElementById('opt-fg').value = '#000000';
+            document.getElementById('opt-fontfamily').value = '"OCR-B", "Courier New", monospace';
+            generateBarcode();
+        }
+
+        // Auto-regenerate on any change
+        document.querySelectorAll('.options input, .options select').forEach(el => {
+            el.addEventListener('change', generateBarcode);
+            el.addEventListener('input', generateBarcode);
+        });
+        document.getElementById('code-input').addEventListener('input', generateBarcode);
+
+        // Generate on load
+        generateBarcode();
+    </script>
+</body>
+</html>
