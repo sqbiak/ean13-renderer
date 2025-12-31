@@ -153,6 +153,33 @@ EAN13Renderer.calculateChecksum('978020137962'); // 4</code></pre>
     </div>
 
     <div class="demo-box">
+        <h3>EAN-13 Validator</h3>
+        <p>Validate EAN-13 codes and calculate checksums with built-in utilities.</p>
+
+        <pre style="font-size: 14px;"><code>// Validate a 13-digit EAN code (checks checksum)
+EAN13Renderer.validate('9780201379624');  // true
+EAN13Renderer.validate('9780201379625');  // false (wrong checksum)
+
+// Calculate the check digit for a 12-digit code
+EAN13Renderer.calculateChecksum('978020137962');  // 4
+
+// Works with 12 digits too (checksum not required)
+EAN13Renderer.validate('978020137962');   // true
+
+// Get full encoding with auto-calculated checksum
+EAN13Renderer.encode('978020137962');
+// { encoding: '10100...', fullCode: '9780201379624' }</code></pre>
+
+        <h4>Try It Live</h4>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="validate-input" value="9780201379624" placeholder="Enter EAN-13 code" style="flex: 1; min-width: 200px;">
+            <button onclick="validateCode()" style="background: #27ae60;">Validate</button>
+        </div>
+
+        <div id="validate-result" style="margin-top: 15px; padding: 15px; border-radius: 6px; font-size: 14px;"></div>
+    </div>
+
+    <div class="demo-box">
         <h3>License</h3>
         <p><strong>MIT License</strong> - Copyright (c) 2024 sbiak</p>
         <p>Free for personal and commercial use. See <a href="LICENSE">LICENSE</a> for details.</p>
@@ -230,6 +257,60 @@ EAN13Renderer.calculateChecksum('978020137962'); // 4</code></pre>
 
         // Generate on load
         generateBarcode();
+
+        // Validator
+        function validateCode() {
+            const input = document.getElementById('validate-input').value.trim();
+            const resultDiv = document.getElementById('validate-result');
+
+            if (!input) {
+                resultDiv.style.background = '#f8d7da';
+                resultDiv.style.color = '#721c24';
+                resultDiv.innerHTML = 'Please enter a code to validate.';
+                return;
+            }
+
+            if (!/^\d+$/.test(input)) {
+                resultDiv.style.background = '#f8d7da';
+                resultDiv.style.color = '#721c24';
+                resultDiv.innerHTML = '<strong>Invalid:</strong> Code must contain only digits.';
+                return;
+            }
+
+            if (input.length < 12 || input.length > 13) {
+                resultDiv.style.background = '#f8d7da';
+                resultDiv.style.color = '#721c24';
+                resultDiv.innerHTML = '<strong>Invalid:</strong> EAN-13 requires 12 or 13 digits. You entered ' + input.length + '.';
+                return;
+            }
+
+            const isValid = EAN13Renderer.validate(input);
+            const checksum = EAN13Renderer.calculateChecksum(input.substring(0, 12));
+            const fullCode = input.substring(0, 12) + checksum;
+
+            if (isValid) {
+                resultDiv.style.background = '#d4edda';
+                resultDiv.style.color = '#155724';
+                resultDiv.innerHTML = '<strong>Valid EAN-13</strong><br>' +
+                    'Code: <code>' + fullCode + '</code><br>' +
+                    'Check digit: <code>' + checksum + '</code>';
+            } else {
+                resultDiv.style.background = '#f8d7da';
+                resultDiv.style.color = '#721c24';
+                resultDiv.innerHTML = '<strong>Invalid checksum!</strong><br>' +
+                    'You entered: <code>' + input + '</code><br>' +
+                    'Correct code should be: <code>' + fullCode + '</code><br>' +
+                    'Expected check digit: <code>' + checksum + '</code>, got: <code>' + input[12] + '</code>';
+            }
+        }
+
+        // Validate on Enter key
+        document.getElementById('validate-input').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') validateCode();
+        });
+
+        // Initial validation
+        validateCode();
     </script>
 </body>
 </html>
