@@ -114,63 +114,9 @@
     </div>
 
     <div class="demo-box">
-        <h3>Installation</h3>
-        <pre><code>&lt;!-- CDN (jsDelivr) --&gt;
-&lt;script src="https://cdn.jsdelivr.net/gh/sqbiak/ean13-renderer@1.0.0/ean13-renderer.min.js"&gt;&lt;/script&gt;
-
-&lt;!-- Or download and include locally --&gt;
-&lt;script src="ean13-renderer.min.js"&gt;&lt;/script&gt;</code></pre>
-    </div>
-
-    <div class="demo-box">
-        <h3>Usage</h3>
-        <pre><code>// Render to canvas
-EAN13Renderer.render('#my-canvas', '978020137962');
-
-// With options
-EAN13Renderer.render(canvas, '978020137962', {
-    moduleWidth: 2,     // Bar width (px)
-    height: 70,         // Main bar height (px)
-    guardExtend: 10,    // Guard bar extension (px)
-    fontSize: 14,       // Digit font size (px)
-    textMargin: 2,      // Gap between bars and text
-    quietZone: 12,      // Space for first digit
-    background: '#FFFFFF',
-    foreground: '#000000'
-});
-
-// Get as Data URL
-const dataUrl = EAN13Renderer.toDataURL('978020137962');
-
-// Get as Blob (async)
-const blob = await EAN13Renderer.toBlob('978020137962');
-
-// Validate code
-EAN13Renderer.validate('9780201379624'); // true
-
-// Calculate checksum
-EAN13Renderer.calculateChecksum('978020137962'); // 4</code></pre>
-    </div>
-
-    <div class="demo-box">
         <h3>EAN-13 Validator</h3>
-        <p>Validate EAN-13 codes and calculate checksums with built-in utilities.</p>
+        <p>Check if your EAN-13 barcode is valid and see the correct check digit.</p>
 
-        <pre style="font-size: 14px;"><code>// Validate a 13-digit EAN code (checks checksum)
-EAN13Renderer.validate('9780201379624');  // true
-EAN13Renderer.validate('9780201379625');  // false (wrong checksum)
-
-// Calculate the check digit for a 12-digit code
-EAN13Renderer.calculateChecksum('978020137962');  // 4
-
-// Works with 12 digits too (checksum not required)
-EAN13Renderer.validate('978020137962');   // true
-
-// Get full encoding with auto-calculated checksum
-EAN13Renderer.encode('978020137962');
-// { encoding: '10100...', fullCode: '9780201379624' }</code></pre>
-
-        <h4>Try It Live</h4>
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
             <input type="text" id="validate-input" value="9780201379624" placeholder="Enter EAN-13 code" style="flex: 1; min-width: 200px;">
             <button onclick="validateCode()" style="background: #27ae60;">Validate</button>
@@ -190,6 +136,58 @@ EAN13Renderer.encode('978020137962');
         <p>This library powers <a href="https://bulkbarcodesgenerator.com/" style="color: #fff; font-weight: bold;">Bulk Barcodes Generator</a> - a free online tool for generating multiple barcodes at once.</p>
         <p>Features include: EAN-13, EAN-8, UPC-A, Code 128, and more. Export to PNG, SVG, or PDF.</p>
         <a href="https://bulkbarcodesgenerator.com/" style="display: inline-block; background: white; color: #667eea; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">Try Bulk Barcodes Generator</a>
+    </div>
+
+    <h2 style="margin-top: 40px; color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px;">Developer Documentation</h2>
+
+    <div class="demo-box">
+        <h3>Installation</h3>
+        <pre><code>&lt;!-- CDN (jsDelivr) --&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/sqbiak/ean13-renderer@1.0.0/ean13-renderer.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- Or download and include locally --&gt;
+&lt;script src="ean13-renderer.min.js"&gt;&lt;/script&gt;</code></pre>
+    </div>
+
+    <div class="demo-box">
+        <h3>Rendering API</h3>
+        <pre><code>// Render to canvas
+EAN13Renderer.render('#my-canvas', '978020137962');
+
+// With options
+EAN13Renderer.render(canvas, '978020137962', {
+    moduleWidth: 2,     // Bar width (px)
+    height: 70,         // Main bar height (px)
+    guardExtend: 10,    // Guard bar extension (px)
+    fontSize: 14,       // Digit font size (px)
+    textMargin: 2,      // Gap between bars and text
+    quietZone: 12,      // Space for first digit
+    background: '#FFFFFF',
+    foreground: '#000000'
+});
+
+// Get as Data URL
+const dataUrl = EAN13Renderer.toDataURL('978020137962');
+
+// Get as Blob (async)
+const blob = await EAN13Renderer.toBlob('978020137962');</code></pre>
+    </div>
+
+    <div class="demo-box">
+        <h3>Validation API</h3>
+        <pre><code>// Validate a 13-digit EAN code (checks checksum)
+EAN13Renderer.validate('9780201379624');  // true
+EAN13Renderer.validate('9780201379625');  // false (wrong checksum)
+
+// Calculate the check digit for a 12-digit code
+EAN13Renderer.calculateChecksum('978020137962');  // 4
+
+// Works with 12 digits too (checksum not required)
+EAN13Renderer.validate('978020137962');   // true
+
+// Get full encoding with auto-calculated checksum
+EAN13Renderer.encode('978020137962');
+// { encoding: '10100...', fullCode: '9780201379624' }</code></pre>
     </div>
 
     <script>
