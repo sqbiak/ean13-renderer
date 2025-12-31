@@ -4,7 +4,7 @@
  * A lightweight, professional-quality EAN-13 barcode generator
  * with proper GS1-compliant digit placement.
  *
- * @version 1.0.1
+ * @version 1.1.0
  * @license Proprietary
  * @author ZenBlock
  * @copyright (c) 2024 ZenBlock. All Rights Reserved.
@@ -61,6 +61,8 @@
         'LLLLLL', 'LLGLGG', 'LLGGLG', 'LLGGGL', 'LGLLGG',
         'LGGLLG', 'LGGGLL', 'LGLGLG', 'LGLGGL', 'LGGLGL'
     ];
+
+    const SVG_NS = 'http://www.w3.org/2000/svg';
 
     /**
      * Calculate EAN-13 check digit
@@ -271,15 +273,142 @@
         });
     }
 
+    /**
+     * Render EAN-13 barcode to SVG element
+     * @param {SVGElement|string} svg - SVG element or selector
+     * @param {string} code - 12 or 13 digit EAN code
+     * @param {object} options - Rendering options
+     * @returns {SVGElement} The SVG element
+     */
+    function renderSVG(svg, code, options = {}) {
+        if (typeof svg === 'string') {
+            svg = document.querySelector(svg);
+        }
+        if (!svg) {
+            throw new Error('Invalid SVG element');
+        }
+
+        const opts = { ...DEFAULTS, ...options };
+        const {
+            moduleWidth, height, guardExtend, fontSize,
+            textMargin, quietZone, sideDigitGap,
+            paddingLeft, paddingRight, paddingTop, paddingBottom,
+            background, foreground, font
+        } = opts;
+
+        const { encoding, fullCode } = encode(code);
+
+        const barcodeWidth = encoding.length * moduleWidth;
+        const guardHeight = height + guardExtend;
+        const contentWidth = barcodeWidth + quietZone * 2;
+        const contentHeight = guardHeight + fontSize + textMargin;
+        const totalWidth = contentWidth + paddingLeft + paddingRight;
+        const totalHeight = contentHeight + paddingTop + paddingBottom;
+
+        svg.innerHTML = '';
+        svg.setAttribute('xmlns', SVG_NS);
+        svg.setAttribute('width', totalWidth);
+        svg.setAttribute('height', totalHeight);
+        svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
+
+        // Background
+        const bgRect = document.createElementNS(SVG_NS, 'rect');
+        bgRect.setAttribute('width', totalWidth);
+        bgRect.setAttribute('height', totalHeight);
+        bgRect.setAttribute('fill', background);
+        svg.appendChild(bgRect);
+
+        const offsetX = paddingLeft;
+        const offsetY = paddingTop;
+
+        // Bars
+        let x = offsetX + quietZone;
+        for (let i = 0; i < encoding.length; i++) {
+            const isGuard = (i < 3) || (i >= 45 && i < 50) || (i >= 92);
+            const barHeight = isGuard ? guardHeight : height;
+
+            if (encoding[i] === '1') {
+                const bar = document.createElementNS(SVG_NS, 'rect');
+                bar.setAttribute('x', x);
+                bar.setAttribute('y', offsetY);
+                bar.setAttribute('width', moduleWidth);
+                bar.setAttribute('height', barHeight);
+                bar.setAttribute('fill', foreground);
+                svg.appendChild(bar);
+            }
+            x += moduleWidth;
+        }
+
+        // Text
+        const textY = offsetY + height + textMargin + fontSize;
+
+        // First digit
+        const firstDigit = document.createElementNS(SVG_NS, 'text');
+        firstDigit.setAttribute('x', offsetX + quietZone - sideDigitGap);
+        firstDigit.setAttribute('y', textY);
+        firstDigit.setAttribute('text-anchor', 'end');
+        firstDigit.setAttribute('font-family', font);
+        firstDigit.setAttribute('font-size', fontSize);
+        firstDigit.setAttribute('fill', foreground);
+        firstDigit.textContent = fullCode[0];
+        svg.appendChild(firstDigit);
+
+        // Left group
+        const leftStart = offsetX + quietZone + 3 * moduleWidth;
+        for (let i = 0; i < 6; i++) {
+            const digitX = leftStart + (i + 0.5) * 7 * moduleWidth;
+            const digit = document.createElementNS(SVG_NS, 'text');
+            digit.setAttribute('x', digitX);
+            digit.setAttribute('y', textY);
+            digit.setAttribute('text-anchor', 'middle');
+            digit.setAttribute('font-family', font);
+            digit.setAttribute('font-size', fontSize);
+            digit.setAttribute('fill', foreground);
+            digit.textContent = fullCode[i + 1];
+            svg.appendChild(digit);
+        }
+
+        // Right group
+        const rightStart = offsetX + quietZone + 50 * moduleWidth;
+        for (let i = 0; i < 6; i++) {
+            const digitX = rightStart + (i + 0.5) * 7 * moduleWidth;
+            const digit = document.createElementNS(SVG_NS, 'text');
+            digit.setAttribute('x', digitX);
+            digit.setAttribute('y', textY);
+            digit.setAttribute('text-anchor', 'middle');
+            digit.setAttribute('font-family', font);
+            digit.setAttribute('font-size', fontSize);
+            digit.setAttribute('fill', foreground);
+            digit.textContent = fullCode[i + 7];
+            svg.appendChild(digit);
+        }
+
+        return svg;
+    }
+
+    /**
+     * Render to new SVG and return as string
+     * @param {string} code - 12 or 13 digit EAN code
+     * @param {object} options - Rendering options
+     * @returns {string} SVG string
+     */
+    function toSVG(code, options = {}) {
+        const svg = document.createElementNS(SVG_NS, 'svg');
+        renderSVG(svg, code, options);
+        return new XMLSerializer().serializeToString(svg);
+    }
+
     // Public API
     return {
         render,
+        renderSVG,
         toDataURL,
         toBlob,
+        toSVG,
         encode,
         validate,
         calculateChecksum,
-        version: '1.0.1',
+        version: '1.1.0',
         DEFAULTS
     };
 
