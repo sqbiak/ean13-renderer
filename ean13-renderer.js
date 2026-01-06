@@ -3,8 +3,9 @@
  *
  * A lightweight, professional-quality EAN-13 barcode generator
  * with proper GS1-compliant digit placement.
+ * Now with ISBN mode support for book barcodes.
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @license Proprietary
  * @author ZenBlock
  * @copyright (c) 2024 ZenBlock. All Rights Reserved.
@@ -32,7 +33,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-(function(global, factory) {
+(function (global, factory) {
     // UMD (Universal Module Definition)
     if (typeof exports === 'object' && typeof module !== 'undefined') {
         module.exports = factory();
@@ -41,7 +42,7 @@
     } else {
         global.EAN13Renderer = factory();
     }
-}(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function() {
+}(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function () {
     'use strict';
 
     // EAN-13 encoding tables
@@ -89,6 +90,21 @@
             return parseInt(code[12]) === calculateChecksum(code.substring(0, 12));
         }
         return false;
+    }
+
+    /**
+     * Format ISBN-13 with hyphens
+     * Uses simplified hyphenation (978-X-XX-XXXXXX-X)
+     * @param {string} code13 - 13-digit ISBN
+     * @returns {string} Hyphenated ISBN
+     */
+    function formatISBN(code13) {
+        // Standard simplified ISBN-13 format: 978-X-XX-XXXXXX-X
+        return code13.slice(0, 3) + '-' +
+            code13.slice(3, 4) + '-' +
+            code13.slice(4, 6) + '-' +
+            code13.slice(6, 12) + '-' +
+            code13.slice(12);
     }
 
     /**
@@ -148,7 +164,10 @@
         paddingBottom: 0,    // Extra padding on bottom
         background: '#FFFFFF',
         foreground: '#000000',
-        font: '"OCR-B", "Courier New", monospace'
+        font: '"OCR-B", "Courier New", monospace',
+        // ISBN mode options
+        isbnMode: false,     // When true, renders "ISBN" prefix above barcode
+        isbnFontSize: 10     // Font size for ISBN prefix text
     };
 
     /**
@@ -173,7 +192,8 @@
             moduleWidth, height, guardExtend, fontSize,
             textMargin, quietZone, sideDigitGap,
             paddingLeft, paddingRight, paddingTop, paddingBottom,
-            background, foreground, font
+            background, foreground, font,
+            isbnMode, isbnFontSize
         } = opts;
 
         // Encode the barcode
@@ -183,7 +203,10 @@
         const barcodeWidth = encoding.length * moduleWidth;
         const guardHeight = height + guardExtend;
         const contentWidth = barcodeWidth + quietZone * 2;
-        const contentHeight = guardHeight + fontSize + textMargin;
+
+        // Add space for ISBN prefix if enabled
+        const isbnPrefixHeight = isbnMode ? (isbnFontSize + 4) : 0;
+        const contentHeight = guardHeight + fontSize + textMargin + isbnPrefixHeight;
         const totalWidth = contentWidth + paddingLeft + paddingRight;
         const totalHeight = contentHeight + paddingTop + paddingBottom;
 
@@ -197,9 +220,19 @@
         ctx.fillStyle = background;
         ctx.fillRect(0, 0, totalWidth, totalHeight);
 
-        // Offset for padding
+        // Offset for padding (and ISBN prefix space)
         const offsetX = paddingLeft;
-        const offsetY = paddingTop;
+        const offsetY = paddingTop + isbnPrefixHeight;
+
+        // Draw ISBN prefix if enabled
+        if (isbnMode) {
+            ctx.fillStyle = foreground;
+            ctx.font = `${isbnFontSize}px ${font}`;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            const isbnText = 'ISBN ' + formatISBN(fullCode);
+            ctx.fillText(isbnText, offsetX + quietZone, paddingTop);
+        }
 
         // Draw bars
         ctx.fillStyle = foreground;
@@ -293,7 +326,8 @@
             moduleWidth, height, guardExtend, fontSize,
             textMargin, quietZone, sideDigitGap,
             paddingLeft, paddingRight, paddingTop, paddingBottom,
-            background, foreground, font
+            background, foreground, font,
+            isbnMode, isbnFontSize
         } = opts;
 
         const { encoding, fullCode } = encode(code);
@@ -301,7 +335,10 @@
         const barcodeWidth = encoding.length * moduleWidth;
         const guardHeight = height + guardExtend;
         const contentWidth = barcodeWidth + quietZone * 2;
-        const contentHeight = guardHeight + fontSize + textMargin;
+
+        // Add space for ISBN prefix if enabled
+        const isbnPrefixHeight = isbnMode ? (isbnFontSize + 4) : 0;
+        const contentHeight = guardHeight + fontSize + textMargin + isbnPrefixHeight;
         const totalWidth = contentWidth + paddingLeft + paddingRight;
         const totalHeight = contentHeight + paddingTop + paddingBottom;
 
@@ -319,7 +356,20 @@
         svg.appendChild(bgRect);
 
         const offsetX = paddingLeft;
-        const offsetY = paddingTop;
+        const offsetY = paddingTop + isbnPrefixHeight;
+
+        // ISBN prefix if enabled
+        if (isbnMode) {
+            const isbnText = document.createElementNS(SVG_NS, 'text');
+            isbnText.setAttribute('x', offsetX + quietZone);
+            isbnText.setAttribute('y', paddingTop + isbnFontSize);
+            isbnText.setAttribute('text-anchor', 'start');
+            isbnText.setAttribute('font-family', font);
+            isbnText.setAttribute('font-size', isbnFontSize);
+            isbnText.setAttribute('fill', foreground);
+            isbnText.textContent = 'ISBN ' + formatISBN(fullCode);
+            svg.appendChild(isbnText);
+        }
 
         // Bars
         let x = offsetX + quietZone;
@@ -408,7 +458,8 @@
         encode,
         validate,
         calculateChecksum,
-        version: '1.1.0',
+        formatISBN,
+        version: '1.2.0',
         DEFAULTS
     };
 
