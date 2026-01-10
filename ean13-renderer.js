@@ -5,7 +5,7 @@
  * with proper GS1-compliant digit placement.
  * Now with ISBN mode support for book barcodes.
  *
- * @version 1.2.0
+ * @version 1.2.1
  * @license Proprietary
  * @author ZenBlock
  * @copyright (c) 2024 ZenBlock. All Rights Reserved.
@@ -342,16 +342,20 @@
         const totalWidth = contentWidth + paddingLeft + paddingRight;
         const totalHeight = contentHeight + paddingTop + paddingBottom;
 
+        // Round all dimensions to prevent sub-pixel rendering artifacts
+        const roundedWidth = Math.round(totalWidth);
+        const roundedHeight = Math.round(totalHeight);
+
         svg.innerHTML = '';
         svg.setAttribute('xmlns', SVG_NS);
-        svg.setAttribute('width', totalWidth);
-        svg.setAttribute('height', totalHeight);
-        svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
+        svg.setAttribute('width', roundedWidth);
+        svg.setAttribute('height', roundedHeight);
+        svg.setAttribute('viewBox', `0 0 ${roundedWidth} ${roundedHeight}`);
 
         // Background
         const bgRect = document.createElementNS(SVG_NS, 'rect');
-        bgRect.setAttribute('width', totalWidth);
-        bgRect.setAttribute('height', totalHeight);
+        bgRect.setAttribute('width', roundedWidth);
+        bgRect.setAttribute('height', roundedHeight);
         bgRect.setAttribute('fill', background);
         svg.appendChild(bgRect);
 
@@ -361,44 +365,45 @@
         // ISBN prefix if enabled
         if (isbnMode) {
             const isbnText = document.createElementNS(SVG_NS, 'text');
-            isbnText.setAttribute('x', offsetX + quietZone);
-            isbnText.setAttribute('y', paddingTop + isbnFontSize);
+            isbnText.setAttribute('x', Math.round(offsetX + quietZone));
+            isbnText.setAttribute('y', Math.round(paddingTop + isbnFontSize));
             isbnText.setAttribute('text-anchor', 'start');
             isbnText.setAttribute('font-family', font);
-            isbnText.setAttribute('font-size', isbnFontSize);
+            isbnText.setAttribute('font-size', Math.round(isbnFontSize));
             isbnText.setAttribute('fill', foreground);
             isbnText.textContent = 'ISBN ' + formatISBN(fullCode);
             svg.appendChild(isbnText);
         }
 
-        // Bars
-        let x = offsetX + quietZone;
+        // Bars - use integer positions to prevent sub-pixel rendering artifacts
+        const roundedModuleWidth = Math.round(moduleWidth);
         for (let i = 0; i < encoding.length; i++) {
             const isGuard = (i < 3) || (i >= 45 && i < 50) || (i >= 92);
-            const barHeight = isGuard ? guardHeight : height;
+            const barHeight = isGuard ? Math.round(guardHeight) : Math.round(height);
+            const x = Math.round(offsetX + quietZone + i * moduleWidth);
 
             if (encoding[i] === '1') {
                 const bar = document.createElementNS(SVG_NS, 'rect');
                 bar.setAttribute('x', x);
-                bar.setAttribute('y', offsetY);
-                bar.setAttribute('width', moduleWidth);
+                bar.setAttribute('y', Math.round(offsetY));
+                bar.setAttribute('width', roundedModuleWidth);
                 bar.setAttribute('height', barHeight);
                 bar.setAttribute('fill', foreground);
                 svg.appendChild(bar);
             }
-            x += moduleWidth;
         }
 
-        // Text
-        const textY = offsetY + height + textMargin + fontSize;
+        // Text - round all positions
+        const textY = Math.round(offsetY + height + textMargin + fontSize);
+        const roundedFontSize = Math.round(fontSize);
 
         // First digit
         const firstDigit = document.createElementNS(SVG_NS, 'text');
-        firstDigit.setAttribute('x', offsetX + quietZone - sideDigitGap);
+        firstDigit.setAttribute('x', Math.round(offsetX + quietZone - sideDigitGap));
         firstDigit.setAttribute('y', textY);
         firstDigit.setAttribute('text-anchor', 'end');
         firstDigit.setAttribute('font-family', font);
-        firstDigit.setAttribute('font-size', fontSize);
+        firstDigit.setAttribute('font-size', roundedFontSize);
         firstDigit.setAttribute('fill', foreground);
         firstDigit.textContent = fullCode[0];
         svg.appendChild(firstDigit);
@@ -406,13 +411,13 @@
         // Left group
         const leftStart = offsetX + quietZone + 3 * moduleWidth;
         for (let i = 0; i < 6; i++) {
-            const digitX = leftStart + (i + 0.5) * 7 * moduleWidth;
+            const digitX = Math.round(leftStart + (i + 0.5) * 7 * moduleWidth);
             const digit = document.createElementNS(SVG_NS, 'text');
             digit.setAttribute('x', digitX);
             digit.setAttribute('y', textY);
             digit.setAttribute('text-anchor', 'middle');
             digit.setAttribute('font-family', font);
-            digit.setAttribute('font-size', fontSize);
+            digit.setAttribute('font-size', roundedFontSize);
             digit.setAttribute('fill', foreground);
             digit.textContent = fullCode[i + 1];
             svg.appendChild(digit);
@@ -421,13 +426,13 @@
         // Right group
         const rightStart = offsetX + quietZone + 50 * moduleWidth;
         for (let i = 0; i < 6; i++) {
-            const digitX = rightStart + (i + 0.5) * 7 * moduleWidth;
+            const digitX = Math.round(rightStart + (i + 0.5) * 7 * moduleWidth);
             const digit = document.createElementNS(SVG_NS, 'text');
             digit.setAttribute('x', digitX);
             digit.setAttribute('y', textY);
             digit.setAttribute('text-anchor', 'middle');
             digit.setAttribute('font-family', font);
-            digit.setAttribute('font-size', fontSize);
+            digit.setAttribute('font-size', roundedFontSize);
             digit.setAttribute('fill', foreground);
             digit.textContent = fullCode[i + 7];
             svg.appendChild(digit);
@@ -459,7 +464,7 @@
         validate,
         calculateChecksum,
         formatISBN,
-        version: '1.2.0',
+        version: '1.2.1',
         DEFAULTS
     };
 
